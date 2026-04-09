@@ -24,12 +24,44 @@ import os
 DATA_PATH = '/opt/airflow/dags/data'
 os.mkdir(DATA_PATH, exist_ok=True)
 
+def _extract(**kwargs):
+    pass
+def _trasform(**kwargs):
+    pass
+def _load(**kwargs):
+    pass
+
 # 3. DAG 정의
-with DAG() as dag:
+with DAG(
+    dag_id      = "05_mysql_etl", 
+    description = "etl 수행하여 mysql에 온도 센서 데이터 적제",
+    default_args= {
+        'owner'             : 'de_2team_manager',        
+        'retries'           : 1,
+        'retry_delay'       : timedelta(minutes=1)
+    },
+    schedule_interval = '@daily',
+    start_date  = datetime(2026,2,25),     
+    catchup     = False,
+    tags        = ['mysql', 'etl'],
+) as dag:
     # 4. task 정의
-    task_extract    = PythonOperator()
-    task_trasform   = PythonOperator()
-    task_load       = PythonOperator()
+    task_create_table = MysqlOperator(
+        # 최초는 생성, 존재하면 pass => if not exists
+        task_id = "create_table",
+    )
+    task_extract    = PythonOperator(
+        task_id = "extract",
+        python_callable = _extract
+    )
+    task_trasform   = PythonOperator(
+        task_id = "trasform",
+        python_callable = _trasform
+    )
+    task_load       = PythonOperator(
+        task_id = "load",
+        python_callable = _load
+    )
 
     # 5. 의존성 정의 -> 시나리오별 준비 
-    task_extract >> task_trasform >> task_load
+    task_create_table >> task_extract >> task_trasform >> task_load
