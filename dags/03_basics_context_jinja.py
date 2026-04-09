@@ -1,5 +1,5 @@
 '''
-- macro + jinja 활용하여 airflow 내부 정보 접근 출력등
+- macro + jinja 활용하여 airflow 내부 정보 접근 출력등.
 '''
 # 1. 모듈 가져오기
 from datetime import datetime, timedelta
