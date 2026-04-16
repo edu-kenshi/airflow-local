@@ -39,7 +39,7 @@ print( kinesis )
 
 # 4. 데이터 제너레이터 함수 구성
 def gen_stock_data():
-    ticker = ['NVDA', 'GOOGL', 'AAPL', 'TSLA', 'AMZN', 'MSFT'],
+    ticker = ['NVDA', 'GOOGL', 'AAPL', 'TSLA', 'AMZN', 'MSFT']
     # 종목별 특정 시간(기간)동안 평균가 연산 => s3 전달 목표
     return {
         "event_time": datetime.now().isoformat(),
@@ -55,6 +55,7 @@ try:
     while True:
         # 데이터 생성
         data = gen_stock_data()
+        print( f"전송전: {data}")
         # kinesis 전달
         kinesis.put_record(
             # 스트림 이름
