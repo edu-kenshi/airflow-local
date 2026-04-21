@@ -104,7 +104,7 @@ def run_producer(i, store_id):
       log_entry = gen_data(store_id)
       #print( log_entry )
       if send_to_kinesis(log_entry):
-        print(f'{log_entry["event_time"]} 전송 성공 { log_entry["event_id"][:6] }')
+        print(f'{log_entry["event_time"]} 전송 성공 { store_id }')
       time.sleep( random.uniform(0.5, 1.5) )
       #break
   except KeyboardInterrupt:
