@@ -86,7 +86,7 @@ with DAG(
                 avg(score) as avg_score,
                 min(score) as min_score,
                 max(score) as max_score
-            from s3_exam_csv
+            from s3_exam_csv_tbl
             group by result            
         ''',
         database=DATABASE_NAME,
