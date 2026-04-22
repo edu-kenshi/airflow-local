@@ -26,7 +26,9 @@ from airflow.providers.amazon.aws.operators.athena import AthenaOperator
 # 2. 환경변수
 DATABASE_BRONZE = 'de_ai_30_ma_bronze_db' 
 DATABASE_SILVER = 'de_ai_30_ma_silver_db'
+# 데이터 저장용 -> 실데이터
 SILVER_S3_PATH  = 's3://de-ai-30-827913617635-ap-northeast-2-an/medallion/silver/'
+# 쿼리 히스토리등 저장용 -> 메타
 ATHENA_RESULTS  = 's3://de-ai-30-827913617635-ap-northeast-2-an/athena-results/'
 SILVER_TBL_NAME = 'sales_silver_tbl'
 
@@ -81,10 +83,11 @@ with DAG(
             where   year = '{{ execution_date.format('YYYY') }}'
                 and month= '{{ execution_date.format('MM') }}'
                 and day  = '{{ execution_date.format('DD') }}'
-                and hour = '{{ execution_date.format('HH') }}'
+                and hour = '10'
             ;
 
         ''',
+        # and hour = '{{ execution_date.format('HH') }}'
         database= DATABASE_SILVER,
         params  = {
             'database_bronze':DATABASE_BRONZE, 
