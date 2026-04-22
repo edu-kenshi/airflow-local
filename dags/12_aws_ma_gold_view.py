@@ -32,25 +32,21 @@ with DAG(
     tags        = ['aws', 'medallion', 'gold', 'athena', 'view'],
 ) as dag:
     # 작동하면 최신 정보까지 모두 수집함 -> 가상테이블
+    # 조건 : 어제 데이터를 오늘 수행 -> 조건의 날짜는 1일전 과거가됨 => dt 연산 처리 필요
     create_gold_view = AthenaOperator(
         task_id='create_or_replace_gold_view',
         query="""
-            CREATE EXTERNAL TABLE IF NOT EXISTS {{ params.database_silver }}.{{ params.tbl_nm }} (
-                event_id string,
-                event_timestamp timestamp,
-                user_id string,
-                item_id string,
-                price int,
-                qty int,
-                total_price int,
-                store_id string,
-                source_ip string,
-                user_agent string
-            )
-            PARTITIONED BY (dt string, hr string)
-            STORED AS PARQUET
-            LOCATION '{{ params.silver_path }}'
-            TBLPROPERTIES ('parquet.compress'='SNAPPY');
+            create or replace view {{ params.database_gold }}.{{ params.view_nm }} as
+            select
+                item_id,
+                sum(qty) as total_qty,
+                sum(total_price) as total_revenue,
+                count(distinct user_id) as unique_customer,
+                dt as sales_date
+            from {{ database_silver }}.{{ table_nm }}
+            where dt='{{ ( execution_date-macros.timedelta(days=1) ).format('YYYY-MM-DD')  }}'
+            group by dt, item_id
+            ;
         """,
         params={
             'database_gold'  : DATABASE_GOLD,
