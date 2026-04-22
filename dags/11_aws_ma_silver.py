@@ -59,10 +59,24 @@ with DAG(
         query   = '''
             Create Table if not exists {{ params.database_silver }}.{{ params.tbl_nm }};
             with (
-
+                format              = 'PARQUET',
+                parquet_compression = 'SNAPPY',
+                external_location   = {{ params.silver_path }},
+                partitioned_by      = ARRAY['dt','hr']
             ) As 
             Select 
-                
+                event_id,
+                event_time as event_timestamp,
+                data.user_id,
+                data.item_id,
+                data.price,
+                data.qty,
+                (data.price * data.qty) as total_price ,
+                data.store_id,
+                source_ip,
+                user_agent,
+                cast(year || '-' || 'month' || '-' || day as VARCHAR) as dt,
+                hour as hr,
             from {{ params.DATABASE_BRONZE }}.raw_bronze_tbl
             where   year = {{ execution_date.foramt('YYYY') }}
                 and month= {{ execution_date.foramt('MM') }}
@@ -74,9 +88,9 @@ with DAG(
         params  = {
             'database_bronze':DATABASE_BRONZE, 
             'database_silver':DATABASE_SILVER, 
-            'tbl_nm':SILVER_TBL_NAME
+            'tbl_nm':SILVER_TBL_NAME,
+            'silver_path':ATHENA_RESULTS
         } 
-
     )
 
     # 5. 의존성(injection) 구성
