@@ -24,8 +24,8 @@ from airflow import DAG
 from airflow.providers.amazon.aws.operators.athena import AthenaOperator
 
 # 2. 환경변수
-DATABASE_BRONZE = 'de-ai-30-ma-bronze_db' 
-DATABASE_SILVER = 'de-ai-30-ma-silver_db'
+DATABASE_BRONZE = 'de_ai_30_ma_bronze_db' 
+DATABASE_SILVER = 'de_ai_30_ma_silver_db'
 SILVER_S3_PATH  = 's3://de-ai-30-827913617635-ap-northeast-2-an/medallion/silver/'
 ATHENA_RESULTS  = 's3://de-ai-30-827913617635-ap-northeast-2-an/athena-results/'
 SILVER_TBL_NAME = 'sales_silver_tbl'
@@ -52,9 +52,24 @@ with DAG(
         output_location = ATHENA_RESULTS,
         params  = {'database_silver':DATABASE_SILVER, 'tbl_nm':SILVER_TBL_NAME} 
     )
+    # 수행시간 => airflow context에 정보가 기롟되어 있음, 
+    # Jinja 템프릿 활용중 => {{ execution_date.foramt('YYYY') }} => 2026 세팅됨
     ctas_silver_task = AthenaOperator(
         task_id = 'ctas_silver',
-        query   = 'desc {{ params.tbl_nm }};',
+        query   = '''
+            Create Table if not exists {{ params.database_silver }}.{{ params.tbl_nm }};
+            with (
+
+            ) As 
+            Select 
+                
+            from {{ params.DATABASE_BRONZE }}.raw_bronze_tbl
+            where   year = {{ execution_date.foramt('YYYY') }}
+                and month= {{ execution_date.foramt('MM') }}
+                and day  = {{ execution_date.foramt('DD') }}
+                and hour = {{ execution_date.foramt('HH') }}
+
+        ''',
         database= DATABASE_SILVER,
         params  = {
             'database_bronze':DATABASE_BRONZE, 
