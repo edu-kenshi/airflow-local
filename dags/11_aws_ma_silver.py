@@ -28,9 +28,33 @@ DATABASE_BRONZE = 'de-ai-30-ma-bronze_db'
 DATABASE_SILVER = 'de-ai-30-ma-silver_db'
 SILVER_S3_PATH  = 's3://de-ai-30-827913617635-ap-northeast-2-an/medallion/silver/'
 ATHENA_RESULTS  = 's3://de-ai-30-827913617635-ap-northeast-2-an/athena-results/'
+SILVER_TBL_NAME = 'sales_silver_tbl'
 
 # 3. DAG 정의
-
+with DAG(
+    dag_id      = "11_medallion_bronze_to_silver_ctas", 
+    description = "athena ctas 작업",
+    default_args= {
+        'owner'             : 'de_2team_manager',        
+        'retries'           : 1,
+        'retry_delay'       : timedelta(minutes=1)
+    },
+    schedule_interval = '10 * * * *', # 매시 10분에 진행
+    start_date  = datetime(2026,2,25),     
+    catchup     = False,
+    tags        = ['aws', 'medallion', 'silver', 'athena', 'ctas'],
+) as dag:
     # 4. task 정의 (2개)
+    drop_silver_task = AthenaOperator(
+        task_id = 'drop_silver_tbl'
+        query   = 'drop table if exists {{ params.database_silver }}.{{ params.tbl_nm }};',
+        database= DATABASE_SILVER,
+        output_location = ATHENA_RESULTS,
+        params  = {'database_silver':DATABASE_SILVER, 'tbl_nm':SILVER_TBL_NAME} 
+    )
+    ctas_silver_task = AthenaOperator(
+        task_id = 'ctas_silver'
+    )
 
     # 5. 의존성(injection) 구성
+    drop_silver_task >> ctas_silver_task
