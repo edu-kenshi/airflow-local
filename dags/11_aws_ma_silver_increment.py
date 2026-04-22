@@ -35,7 +35,7 @@ with DAG(
     create_silver_table = AthenaOperator(
         task_id='create_silver_table_if_not_exists',
         query="""
-            CREATE EXTERNAL TABLE IF NOT EXISTS {{ params.database_silver }}.{{ tbl_nm }} (
+            CREATE EXTERNAL TABLE IF NOT EXISTS {{ params.database_silver }}.{{ params.tbl_nm }} (
                 event_id string,
                 event_timestamp timestamp,
                 user_id string,
@@ -66,7 +66,7 @@ with DAG(
     insert_silver_data = AthenaOperator(
         task_id='insert_bronze_to_silver',
         query="""
-            INSERT INTO {{ params.database_silver }}.{{ tbl_nm }}
+            INSERT INTO {{ params.database_silver }}.{{ params.tbl_nm }}
             SELECT
                 event_id,
                 event_time as event_timestamp,
