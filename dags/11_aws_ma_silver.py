@@ -46,14 +46,22 @@ with DAG(
 ) as dag:
     # 4. task 정의 (2개)
     drop_silver_task = AthenaOperator(
-        task_id = 'drop_silver_tbl'
+        task_id = 'drop_silver_tbl',
         query   = 'drop table if exists {{ params.database_silver }}.{{ params.tbl_nm }};',
         database= DATABASE_SILVER,
         output_location = ATHENA_RESULTS,
         params  = {'database_silver':DATABASE_SILVER, 'tbl_nm':SILVER_TBL_NAME} 
     )
     ctas_silver_task = AthenaOperator(
-        task_id = 'ctas_silver'
+        task_id = 'ctas_silver',
+        query   = 'desc {{ params.tbl_nm }};',
+        database= DATABASE_SILVER,
+        params  = {
+            'database_bronze':DATABASE_BRONZE, 
+            'database_silver':DATABASE_SILVER, 
+            'tbl_nm':SILVER_TBL_NAME
+        } 
+
     )
 
     # 5. 의존성(injection) 구성
