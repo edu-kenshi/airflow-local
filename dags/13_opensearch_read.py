@@ -8,6 +8,7 @@ from airflow.operators.python import PythonOperator
 from opensearchpy import OpenSearch
 import pendulum # 서울 시간대 간편하게 설정
 from airflow.models import Variable
+import pandas as pd
 
 # 2. 환경변수
 # HOST, AUTH, 인덱스(상황에 따라 별도 구성가능함)->검색어/패턴으로구성/고정등
@@ -53,9 +54,14 @@ def _searching_proc(**kwargs):
         print('조회 결과 없음')
         return
     else:
-        print( len(hits) )
+        print('조회 결과 수', len(hits) )
 
     # 4-1-5 분석 -> 요구사항(평균 온도, 최대 진동등 계산), 이상탐지(허용범위 이상인 경우)
+    # 분석이 가능한 형태의 자료구조 변형(pandas or pyspark등 활용-데이터체급에 따라 적용)
+    data = [ hit['_source'] for hit in hits ] # 원(raw) data 획득 -> dict 형태
+    # data => [ {}, {}, ..., {} ]
+    df   = pd.DataFrame(data)
+    print( df.sample(1) ) # 샘플 1개 출력
 
     # 4-1-6 분석 결과 출력
     pass
